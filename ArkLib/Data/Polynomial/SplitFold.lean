@@ -25,7 +25,7 @@ This file defines n-way splitting and folding operations on polynomials.
 
 When `n = 2`, this recovers the even/odd splitting: `splitNth f 2 0` gives the even
 coefficients and `splitNth f 2 1` gives the odd coefficients (after appropriate
-reindexing). 
+reindexing).
 
 -/
 
@@ -254,7 +254,7 @@ lemma splitNth_degree_le {n : ℕ} {f : 𝔽[X]} [inst : NeZero n] :
 lemma folding_polynomial_eq_sum_splitNth {𝔽 : Type} [Field 𝔽]
   {f : Polynomial 𝔽} {n : ℕ}
   [inst : NeZero n] :
-  FoldingPolynomial.foldingPolynomial (X ^ n) f = 
+  FoldingPolynomial.foldingPolynomial (X ^ n) f =
     ∑ i, C (splitNth f n i) * (X ^ i.val) := by
   symm
   apply FoldingPolynomial.folding_polynomial_is_unique'
@@ -263,8 +263,8 @@ lemma folding_polynomial_eq_sum_splitNth {𝔽 : Type} [Field 𝔽]
       rw [splitNth_def (f := f) (inst := inst)]
     rw [
       Polynomial.map_sum,
-      Polynomial.eval_finset_sum] 
-    simp only [Polynomial.map_mul, map_C, coe_compRingHom, Polynomial.map_pow, map_X, 
+      Polynomial.eval_finset_sum]
+    simp only [Polynomial.map_mul, map_C, coe_compRingHom, Polynomial.map_pow, map_X,
     eval_mul, eval_C, eval_pow, eval_X]
     simp only [comp]
     conv =>
@@ -292,7 +292,7 @@ lemma folding_polynomial_eq_sum_splitNth {𝔽 : Type} [Field 𝔽]
     apply Polynomial.natDegree_sum_le_of_forall_le
     intro i _
     apply Nat.le_trans Polynomial.natDegree_mul_le
-    rcases i with ⟨i, hi⟩ 
+    rcases i with ⟨i, hi⟩
     simp
     omega
 
@@ -301,11 +301,11 @@ lemma folding_polynomial_eq_sum_splitNth {𝔽 : Type} [Field 𝔽]
 lemma polyFold_eq_sum_of_splitNth {𝔽 : Type} [Field 𝔽]
   {f : 𝔽[X]} {n : ℕ} {r : 𝔽}
   [inst : NeZero n] :
-  FoldingPolynomial.polyFold f n r = 
+  FoldingPolynomial.polyFold f n r =
     ∑ i, C (r ^ i.val) * splitNth f n i := by
   simp only [FoldingPolynomial.polyFold, folding_polynomial_eq_sum_splitNth, map_pow]
   rw [Polynomial.eval_finset_sum]
-  simp only [eval_mul, eval_C, eval_pow, eval_X] 
+  simp only [eval_mul, eval_C, eval_pow, eval_X]
   conv =>
     lhs
     rhs
@@ -326,5 +326,26 @@ lemma splitNth_eval_comp_pow {n : ℕ} [NeZero n] (f : 𝔽[X]) (x : 𝔽) (i : 
   ext e a
   rw [← eval]
   simp
+
+/-- Even/odd evaluation split for `n = 2`. -/
+lemma splitNth_two_eval {𝔽 : Type} [CommSemiring 𝔽] (f : 𝔽[X]) (y : 𝔽) :
+    f.eval y =
+      (splitNth f 2 0).eval (y ^ 2) + y * (splitNth f 2 1).eval (y ^ 2) := by
+  conv_lhs => rw [splitNth_def 2 f]
+  rw [eval_finset_sum, Fin.sum_univ_two]
+  simp only [Fin.val_zero, Fin.val_one, pow_zero, pow_one, eval_mul, eval_X,
+    one_mul, splitNth_eval_comp_pow]
+
+/-- `f(x) + f(-x) = 2 · f₀(x²)`, isolating the even part. -/
+lemma splitNth_two_eval_add {𝔽 : Type} [CommRing 𝔽] (f : 𝔽[X]) (x : 𝔽) :
+    f.eval x + f.eval (-x) = 2 * (splitNth f 2 0).eval (x ^ 2) := by
+  rw [splitNth_two_eval f x, splitNth_two_eval f (-x), neg_sq]
+  ring
+
+/-- Likewise `f(x) - f(-x) = 2x · f₁(x²)` for the odd part. -/
+lemma splitNth_two_eval_sub {𝔽 : Type} [CommRing 𝔽] (f : 𝔽[X]) (x : 𝔽) :
+    f.eval x - f.eval (-x) = 2 * x * (splitNth f 2 1).eval (x ^ 2) := by
+  rw [splitNth_two_eval f x, splitNth_two_eval f (-x), neg_sq]
+  ring
 
 end Polynomial
